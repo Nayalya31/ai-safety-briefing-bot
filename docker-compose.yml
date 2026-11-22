@@ -17,7 +17,7 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
-    networks: [backend]
+    networks: [backend, access]
 
   bot:
     build: .
@@ -34,6 +34,7 @@ services:
 networks:
   backend:
     internal: true
+  access:
   egress:
 
 volumes:
