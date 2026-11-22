@@ -2,10 +2,12 @@ import os
 from datetime import datetime, timezone
 
 import pytest
+from aiogram.types import Update
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.db.models import Base, SessionStatus, TrainingResult
+from app.bot.middleware import DatabaseMiddleware
+from app.db.models import Base, ProcessedUpdate, SessionStatus, TrainingResult
 from app.db.repository import DuplicateUpdate, TrainingRepository
 
 
@@ -71,3 +73,15 @@ async def test_resume_cancel_idempotency_and_result(db_factory):
             )
             assert await repository.cancel_active(43) is True
             assert await repository.active_session(43) is None
+
+
+async def test_update_event_is_claimed(db_factory):
+    middleware = DatabaseMiddleware(db_factory)
+
+    async def handler(event, data):
+        return "handled"
+
+    assert await middleware(handler, Update(update_id=101), {}) == "handled"
+
+    async with db_factory() as db:
+        assert await db.scalar(select(func.count()).select_from(ProcessedUpdate)) == 1

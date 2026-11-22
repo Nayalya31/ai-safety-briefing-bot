@@ -18,7 +18,7 @@ class DatabaseMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        update = data.get("event_update")
+        update = event if isinstance(event, Update) else data.get("event_update")
         update_id = update.update_id if isinstance(update, Update) else None
         async with self.session_factory() as session:
             async with session.begin():
