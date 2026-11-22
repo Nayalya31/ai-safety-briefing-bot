@@ -9,15 +9,27 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_development_only}
     volumes:
       - safety_postgres_data:/var/lib/postgresql/data
-    ports:
-      - "127.0.0.1:55432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U safety_app -d safety_briefing"]
       interval: 5s
       timeout: 5s
       retries: 12
     restart: unless-stopped
-    networks: [backend, access]
+    networks: [backend]
+
+  db-access:
+    image: alpine/socat:1.8.0.3
+    command: ["TCP-LISTEN:5432,fork,reuseaddr", "TCP:db:5432"]
+    ports:
+      - "127.0.0.1:55432:5432"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      access:
+        gw_priority: 1
+      backend:
 
   bot:
     build: .
