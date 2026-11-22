@@ -20,16 +20,21 @@ services:
   db-access:
     image: alpine/socat:1.8.0.3
     command: ["TCP-LISTEN:5432,fork,reuseaddr", "TCP:db:5432"]
-    ports:
-      - "127.0.0.1:55432:5432"
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-    networks:
-      access:
-        gw_priority: 1
-      backend:
+    networks: [backend, access]
+
+  db-gateway:
+    image: alpine/socat:1.8.0.3
+    command: ["TCP-LISTEN:5432,fork,reuseaddr", "TCP:db-access:5432"]
+    ports:
+      - "127.0.0.1:55432:5432"
+    depends_on:
+      - db-access
+    restart: unless-stopped
+    networks: [access]
 
   bot:
     build: .
