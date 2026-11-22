@@ -15,7 +15,7 @@ services:
       timeout: 5s
       retries: 12
     restart: unless-stopped
-    networks: [internal]
+    networks: [backend]
 
   bot:
     build: .
@@ -27,11 +27,12 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
-    networks: [internal]
+    networks: [backend, egress]
 
 networks:
-  internal:
+  backend:
     internal: true
+  egress:
 
 volumes:
   safety_postgres_data:
